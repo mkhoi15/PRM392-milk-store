@@ -1,0 +1,20 @@
+# This is a generated file. Not intended for manual editing.
+services:
+  milkstore.api:
+    build:
+      context: "E:\\WorkSpace\\Android2\\MilkStore"
+      dockerfile: "MilkStore.Api/Dockerfile"
+      target: "base"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net8.0/MilkStore.Api.dll"
+    environment:
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    image: "milkstore.api:dev"
+    ports: []
+    volumes:
+    - "C:\\Users\\iseka\\.nuget\\packages:/home/app/.nuget/packages"
+    - "E:\\WorkSpace\\Android2\\MilkStore\\MilkStore.Api:/app:rw"
+    - "E:\\WorkSpace\\Android2\\MilkStore:/src:rw"
+    working_dir: "/app"

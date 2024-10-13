@@ -1,0 +1,33 @@
+﻿services:
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Password12345
+      POSTGRES_DB: milkstore
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+  
+  milkstore.api:
+    image: milkstore.api
+    build:
+      context: .
+      dockerfile: MilkStore.Api/Dockerfile
+    ports:
+      - "5157:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - postgres
+    networks:
+      - backend
+
+volumes:
+  postgres-data:
+networks:
+  backend: 
