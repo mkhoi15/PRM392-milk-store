@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkStore.Api.Models;
 using MilkStore.Api.Shared.Dto;
+using MilkStore.Api.Shared.Dto.User;
+using MilkStore.Api.Shared.Enums;
 
 namespace MilkStore.Api.Controllers;
 
@@ -16,6 +19,7 @@ public class UserController : ControllerBase
     }
     
     [HttpGet]
+    [Authorize(Roles = $"{nameof(RoleName.ShopStaff)},{nameof(RoleName.Admin)}")]
     public async Task<IActionResult> GetUsers(int pageIndex = 1, int pageSize = 10, string? searchString = null, string? searchBy = null)
     {
         
@@ -32,6 +36,7 @@ public class UserController : ControllerBase
             };
         }
 
+        usersQuery = usersQuery.Where(u => u.IsDeleted == false);
         
         var pagedUsers = await Task.Run(() => 
             PagedResult<User>.CreateAsync(usersQuery, pageIndex, pageSize)
@@ -44,7 +49,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> GetUser(Guid id)
     {
         var user = await _dbContext.Users.FindAsync(id);
-        if (user == null)
+        if (user == null || user.IsDeleted)
         {
             return NotFound("Not found user");
         }
@@ -53,22 +58,22 @@ public class UserController : ControllerBase
     }
     
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] User user)
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest user)
     {
         var existedUser = await _dbContext.Users.FindAsync(id);
-        if (existedUser == null)
+        if (existedUser == null || existedUser.IsDeleted)
         {
             return NotFound("Not found user");
         }
 
-        existedUser.Username = user.Username;
-        existedUser.Email = user.Email;
-        existedUser.FullName = user.FullName;
-        existedUser.PhoneNumber = user.PhoneNumber;
-        existedUser.RoleId = user.RoleId;
-        existedUser.Password = user.Password;
+        existedUser.Username = user.Username ?? existedUser.Username;
+        existedUser.Email = user.Email ?? existedUser.Email;
+        existedUser.FullName = user.FullName ?? existedUser.FullName;
+        existedUser.PhoneNumber = user.PhoneNumber ?? existedUser.PhoneNumber;
+        existedUser.Password = user.Password ?? existedUser.Password;
 
         _dbContext.Users.Update(existedUser);
+        
         await _dbContext.SaveChangesAsync();
 
         return Ok(existedUser);
@@ -78,12 +83,13 @@ public class UserController : ControllerBase
     public async Task<IActionResult> DeleteUser(Guid id)
     {
         var existedUser = await _dbContext.Users.FindAsync(id);
-        if (existedUser == null)
+        if (existedUser == null || existedUser.IsDeleted)
         {
             return NotFound("Not found user");
         }
 
-        _dbContext.Users.Remove(existedUser);
+        existedUser.IsDeleted = true;
+        
         await _dbContext.SaveChangesAsync();
 
         return Ok("Deleted user");

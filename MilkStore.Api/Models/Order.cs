@@ -9,10 +9,10 @@ public class Order : IEntity
 
     //[Required(ErrorMessage = "Order code is required.")]
     //[Range(1, long.MaxValue, ErrorMessage = "Order code must be a positive number.")]
-    public long? OrderCode { get; set; }
+    public string? OrderCode { get; set; }
 
     [Required(ErrorMessage = "Order date is required.")]
-    public DateOnly? OrderDate { get; set; }
+    public DateTime? OrderDate { get; set; }
 
     [Required(ErrorMessage = "Order status is required.")]
     [StringLength(50, ErrorMessage = "Order status can't be longer than 50 characters.")]
@@ -30,6 +30,7 @@ public class Order : IEntity
     [StringLength(15, ErrorMessage = "Phone number can't be longer than 15 digits.")]
     public string? PhoneNumber { get; set; }
     
+    public Delivery? Delivery { get; set; }
     public User? User { get; set; }
-    public ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+    public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 }

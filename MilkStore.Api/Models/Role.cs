@@ -8,5 +8,5 @@ public class Role : IEntity
     [StringLength(15, ErrorMessage = "Role name must be less than 15 characters")]
     public string? Name { get; set; }
 
-    public ICollection<User> Users { get; set; } = new List<User>();
+    public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

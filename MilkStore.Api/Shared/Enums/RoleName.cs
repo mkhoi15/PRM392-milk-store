@@ -3,8 +3,7 @@ namespace MilkStore.Api.Shared.Enums;
 public enum RoleName
 {
     Admin = 1,
-    Owner = 2,
-    ShopStaff = 3,
-    DeliveryStaff = 4,
-    Customer = 5
+    ShopStaff = 2,
+    DeliveryStaff = 3,
+    Customer = 4
 }

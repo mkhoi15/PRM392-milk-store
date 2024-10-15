@@ -21,6 +21,7 @@ public class MilkStoreDbContext : DbContext
     public DbSet<OrderDetail> OrderDetails { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<Brand> Brands { get; set; }
+    public DbSet<Delivery> Deliveries { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,11 +38,6 @@ public class MilkStoreDbContext : DbContext
 
         modelBuilder.Entity<Product>().ToTable("Products")
             .HasKey(p => p.Id);
-        modelBuilder.Entity<Product>()
-            .HasMany<OrderDetail>(p => p.OrderDetails)
-            .WithOne(od => od.Product)
-            .HasForeignKey(od => od.ProductId)
-            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<Order>().ToTable("Orders")
             .HasMany<OrderDetail>(o => o.OrderDetails)
@@ -51,6 +47,11 @@ public class MilkStoreDbContext : DbContext
 
         modelBuilder.Entity<OrderDetail>().ToTable("OrderDetails")
             .HasKey(od => od.Id);
+        modelBuilder.Entity<OrderDetail>()
+            .HasOne<Product>(od => od.Product)
+            .WithMany(p => p.OrderDetails)
+            .HasForeignKey(od => od.ProductId)
+            .OnDelete(DeleteBehavior.NoAction);
         
         modelBuilder.Entity<Role>().ToTable("Roles")
             .HasKey(r => r.Id);
@@ -68,10 +69,24 @@ public class MilkStoreDbContext : DbContext
             .HasForeignKey(p => p.BrandId)
             .OnDelete(DeleteBehavior.NoAction);
         
+        modelBuilder.Entity<Delivery>().ToTable("Deliveries")
+            .HasKey(d => d.Id);
+        
+        modelBuilder.Entity<Delivery>()
+            .HasOne<Order>(d => d.Order)
+            .WithOne(o => o.Delivery)
+            .HasForeignKey<Delivery>(d => d.OrderId)
+            .OnDelete(DeleteBehavior.NoAction); // One-to-One with Order
+        
+        modelBuilder.Entity<Delivery>()
+            .HasOne<User>(d => d.DeliveryStaff)
+            .WithMany(u => u.Deliveries)
+            .HasForeignKey(d => d.DeliveryStaffId)
+            .OnDelete(DeleteBehavior.NoAction); // Many-to-One with DeliveryStaff
+        
         // Seed data
         modelBuilder.Entity<Role>().HasData(
             new Role { Id = Guid.NewGuid(), Name = RoleName.Admin.ToString() },
-            new Role { Id = Guid.NewGuid(), Name = RoleName.Owner.ToString() },
             new Role { Id = Guid.NewGuid(), Name = RoleName.ShopStaff.ToString() },
             new Role { Id = Guid.NewGuid(), Name = RoleName.DeliveryStaff.ToString() },
             new Role { Id = Guid.NewGuid(), Name = RoleName.Customer.ToString() }

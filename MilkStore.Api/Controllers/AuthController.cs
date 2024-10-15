@@ -49,7 +49,7 @@ public class AuthController : ControllerBase
             return BadRequest("User don't have role");
         }
         
-        DateTime expires = DateTime.Now.AddDays(3);
+        DateTime expires = DateTime.Now.AddHours(3);
         List<Claim> claims = new()
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
@@ -59,7 +59,7 @@ public class AuthController : ControllerBase
         };
 
         SymmetricSecurityKey securityKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_configuration.GetSection("JwtOptions:SecretKey").Get<string>()));
+            Encoding.UTF8.GetBytes(_configuration["JwtOptions:SecretKey"]));
             
         SigningCredentials signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -72,9 +72,9 @@ public class AuthController : ControllerBase
         );
 
         JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-        string token = tokenHandler.WriteToken(tokenGenerator);
+        var token = tokenHandler.WriteToken(tokenGenerator);
         
-        return Ok(new { token });
+        return Ok(token);
     }
     
     [HttpPost("register")]
@@ -137,11 +137,5 @@ public class AuthController : ControllerBase
         }
     }
     
-    [HttpGet("test")]
-    [Authorize(Roles = "Admin")]
-    public IActionResult Test()
-    {
-        return Ok("Test");
-    }
     
 }

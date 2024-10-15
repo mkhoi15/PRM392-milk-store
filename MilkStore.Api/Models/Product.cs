@@ -25,7 +25,9 @@ public class Product : IEntity
     [Required(ErrorMessage = "Brand ID is required.")]
     public Guid BrandId { get; set; }
     
+    public bool IsDeleted { get; set; } = false;
+    
     public Brand? Brand { get; set; }
     
-    public ICollection<OrderDetail>? OrderDetails { get; set; } = new List<OrderDetail>();
+    public virtual ICollection<OrderDetail>? OrderDetails { get; set; } = new List<OrderDetail>();
 }
