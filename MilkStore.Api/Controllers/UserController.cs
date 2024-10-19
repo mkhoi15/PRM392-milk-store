@@ -32,8 +32,12 @@ public class UserController : ControllerBase
                 "username" => usersQuery.Where(u => u.Username.Contains(searchString)),
                 "email" => usersQuery.Where(u => u.Email.Contains(searchString)),
                 "fullname" => usersQuery.Where(u => u.FullName.Contains(searchString)),
-                _ => usersQuery
+                _ => usersQuery.Where(u => u.FullName.Contains(searchString))
             };
+        }
+        else
+        {
+            usersQuery = usersQuery.Where(u => u.FullName.Contains(searchString));
         }
 
         usersQuery = usersQuery.Where(u => u.IsDeleted == false);

@@ -11,7 +11,7 @@ public class OrderRequest
     public string? OrderCode { get; set; }
 
     [Required(ErrorMessage = "Total price is required.")]
-    [Range(0.01, 1000000, ErrorMessage = "Total price must be between 0.01 and 1,000,000.")]
+    [Range(0.01, 1000000000, ErrorMessage = "Total price must be between 0.01 and 1,000,000,000.")]
     public decimal TotalPrice { get; set; }
 
     [Required(ErrorMessage = "Address is required.")]

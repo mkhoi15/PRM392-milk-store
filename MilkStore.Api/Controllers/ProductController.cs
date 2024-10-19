@@ -33,8 +33,13 @@ public class ProductController : ControllerBase
                 "name" => productsQuery.Where(p => p.Name.Contains(searchString)),
                 "description" => productsQuery.Where(p => p.Description.Contains(searchString)),
                 "brand" => productsQuery.Where(p => p.Brand.Name.Contains(searchString)),
-                _ => productsQuery
+                _ => productsQuery.Where(p => p.Name.Contains(searchString))
             };
+        }
+
+        else
+        {
+            productsQuery = productsQuery.Where(p => p.Name.Contains(searchString));
         }
 
         // Create paginated result from product entities

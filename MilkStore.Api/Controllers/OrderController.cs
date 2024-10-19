@@ -35,8 +35,12 @@ public class OrderController : ControllerBase
                 "orderStatus" => ordersQuery.Where(o => o.OrderStatus.Contains(searchString)),
                 "address" => ordersQuery.Where(o => o.Address.Contains(searchString)),
                 "phoneNumber" => ordersQuery.Where(o => o.PhoneNumber.Contains(searchString)),
-                _ => ordersQuery
+                _ => ordersQuery.Where(o => o.Address.Contains(searchString)),
             };
+        }
+        else
+        {
+            ordersQuery = ordersQuery.Where(o => o.Address.Contains(searchString));
         }
         
         var pagedOrders = await Task.Run(() => 

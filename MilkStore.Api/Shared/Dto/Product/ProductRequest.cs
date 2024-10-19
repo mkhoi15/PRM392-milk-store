@@ -34,7 +34,7 @@ public class ProductUpdateRequest
     [StringLength(500, ErrorMessage = "Description can't be longer than 500 characters.")]
     public string? Description { get; set; }
     
-    [Range(0.01, 10000, ErrorMessage = "Price must be between 0.01 and 10,000.")]
+    [Range(0.01, 10000000, ErrorMessage = "Price must be between 0.01 and 10,000,000.")]
     public decimal? Price { get; set; }
     
     [Range(0, int.MaxValue, ErrorMessage = "Stock can't be negative.")]
