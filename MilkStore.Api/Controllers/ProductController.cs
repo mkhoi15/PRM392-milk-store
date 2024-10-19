@@ -36,7 +36,6 @@ public class ProductController : ControllerBase
                 _ => productsQuery.Where(p => p.Name.Contains(searchString))
             };
         }
-
         else
         {
             productsQuery = productsQuery.Where(p => p.Name.Contains(searchString));

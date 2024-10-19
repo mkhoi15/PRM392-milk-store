@@ -12,7 +12,7 @@ public class ProductRequest
     public string? Description { get; set; }
 
     [Required(ErrorMessage = "Price is required.")]
-    [Range(0.01, 10000, ErrorMessage = "Price must be between 0.01 and 10,000.")]
+    [Range(0.01, 10000000, ErrorMessage = "Price must be between 0.01 and 10,000,000.")]
     public decimal Price { get; set; }
 
     [Required(ErrorMessage = "Stock quantity is required.")]
