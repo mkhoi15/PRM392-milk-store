@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using dotenv.net;
@@ -28,19 +29,18 @@ public class OrderController : ControllerBase
     {
         var ordersQuery = _context.Orders.AsQueryable();
         
-        if (searchBy != null)
+        Expression<Func<Order, bool>> searchByExpression = searchBy switch
         {
-            ordersQuery = searchBy switch
-            {
-                "orderStatus" => ordersQuery.Where(o => o.OrderStatus.Contains(searchString)),
-                "address" => ordersQuery.Where(o => o.Address.Contains(searchString)),
-                "phoneNumber" => ordersQuery.Where(o => o.PhoneNumber.Contains(searchString)),
-                _ => ordersQuery.Where(o => o.Address.Contains(searchString)),
-            };
-        }
-        else
+            "orderStatus" => o => o.OrderStatus.Contains(searchString!),
+            "address" => o => o.Address.Contains(searchString!),
+            "phoneNumber" => o => o.PhoneNumber.Contains(searchString!),
+            _ => o => o.Address.Contains(searchString!) // Default search by address
+        };
+
+        // Apply search filter if searchString is not empty
+        if (!string.IsNullOrEmpty(searchString))
         {
-            ordersQuery = ordersQuery.Where(o => o.Address.Contains(searchString));
+            ordersQuery = ordersQuery.Where(searchByExpression);
         }
         
         var pagedOrders = await Task.Run(() => 
@@ -115,15 +115,18 @@ public class OrderController : ControllerBase
     {
         var ordersQuery = _context.Orders.AsQueryable();
         
-        if (searchBy != null)
+        Expression<Func<Order, bool>> searchByExpression = searchBy switch
         {
-            ordersQuery = searchBy switch
-            {
-                "orderStatus" => ordersQuery.Where(o => o.OrderStatus.Contains(searchString)),
-                "address" => ordersQuery.Where(o => o.Address.Contains(searchString)),
-                "phoneNumber" => ordersQuery.Where(o => o.PhoneNumber.Contains(searchString)),
-                _ => ordersQuery
-            };
+            "orderStatus" => o => o.OrderStatus.Contains(searchString!),
+            "address" => o => o.Address.Contains(searchString!),
+            "phoneNumber" => o => o.PhoneNumber.Contains(searchString!),
+            _ => o => o.Address.Contains(searchString!) // Default search by address
+        };
+        
+        // Apply search filter if searchString is not empty
+        if (!string.IsNullOrEmpty(searchString))
+        {
+            ordersQuery = ordersQuery.Where(searchByExpression);
         }
         
         ordersQuery = ordersQuery.Where(o => o.UserId == id);

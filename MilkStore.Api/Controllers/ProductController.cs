@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -26,20 +27,20 @@ public class ProductController : ControllerBase
             .Include(p => p.Brand)
             .Where(p => p.IsDeleted == false);
 
-        if (searchBy != null)
+        Expression<Func<Product, bool>> searchByExpression = searchBy switch
         {
-            productsQuery = searchBy switch
-            {
-                "name" => productsQuery.Where(p => p.Name.Contains(searchString)),
-                "description" => productsQuery.Where(p => p.Description.Contains(searchString)),
-                "brand" => productsQuery.Where(p => p.Brand.Name.Contains(searchString)),
-                _ => productsQuery.Where(p => p.Name.Contains(searchString))
-            };
-        }
-        else
+            "name" => p => p.Name.Contains(searchString!),
+            "description" => p => p.Description.Contains(searchString!),
+            "brand" => p => p.Brand.Name.Contains(searchString!),
+            _ => p => p.Name.Contains(searchString!) // Default to search by name
+        };
+
+        // Apply the search filter if a search string is provided
+        if (!string.IsNullOrEmpty(searchString))
         {
-            productsQuery = productsQuery.Where(p => p.Name.Contains(searchString));
+            productsQuery = productsQuery.Where(searchByExpression);
         }
+        
 
         // Create paginated result from product entities
         var pagedProducts = await Task.Run(() => 

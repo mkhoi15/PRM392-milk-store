@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkStore.Api.Models;
@@ -25,19 +26,18 @@ public class UserController : ControllerBase
         
         var usersQuery = _dbContext.Users.AsQueryable();
 
-        if (searchBy != null)
+        Expression<Func<User, bool>> searchByExpression = searchBy switch
         {
-            usersQuery = searchBy switch
-            {
-                "username" => usersQuery.Where(u => u.Username.Contains(searchString)),
-                "email" => usersQuery.Where(u => u.Email.Contains(searchString)),
-                "fullname" => usersQuery.Where(u => u.FullName.Contains(searchString)),
-                _ => usersQuery.Where(u => u.FullName.Contains(searchString))
-            };
-        }
-        else
+            "username" => u => u.Username.Contains(searchString!),
+            "email" => u => u.Email.Contains(searchString!),
+            "fullname" => u => u.FullName.Contains(searchString!),
+            _ => u => u.FullName.Contains(searchString!) // Default to search by FullName
+        };
+
+        // Apply search filter if searchString is not empty
+        if (!string.IsNullOrEmpty(searchString))
         {
-            usersQuery = usersQuery.Where(u => u.FullName.Contains(searchString));
+            usersQuery = usersQuery.Where(searchByExpression);
         }
 
         usersQuery = usersQuery.Where(u => u.IsDeleted == false);
