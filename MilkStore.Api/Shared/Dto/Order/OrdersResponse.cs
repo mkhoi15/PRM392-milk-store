@@ -4,6 +4,7 @@ public class OrdersResponse
 {
     public Guid? Id { get; set; }
     public Guid? UserId { get; set; }
+    public string? CustomerName { get; set; }
     public string? OrderCode { get; set; }
     
     public DateTime? OrderDate { get; set; }

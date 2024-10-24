@@ -44,13 +44,14 @@ public class OrderController : ControllerBase
         }
         
         var pagedOrders = await Task.Run(() => 
-            PagedResult<Order>.CreateAsync(ordersQuery, pageIndex, pageSize)
+            PagedResult<Order>.CreateAsync(ordersQuery.Include(o => o.User), pageIndex, pageSize)
         );
         
         var orderResponses = pagedOrders.Select(o => new OrdersResponse()
         {
             Id = o.Id,
             UserId = o.UserId,
+            CustomerName = o.User!.FullName,
             OrderCode = o.OrderCode,
             OrderDate = o.OrderDate,
             OrderStatus = o.OrderStatus,
@@ -132,13 +133,14 @@ public class OrderController : ControllerBase
         ordersQuery = ordersQuery.Where(o => o.UserId == id);
         
         var pagedOrders = await Task.Run(() => 
-            PagedResult<Order>.CreateAsync(ordersQuery, pageIndex, pageSize)
+            PagedResult<Order>.CreateAsync(ordersQuery.Include(o => o.User), pageIndex, pageSize)
         );
         
         var orderResponses = pagedOrders.Select(o => new OrdersResponse()
         {
             Id = o.Id,
             UserId = o.UserId,
+            CustomerName = o.User!.FullName,
             OrderCode = o.OrderCode,
             OrderDate = o.OrderDate,
             OrderStatus = o.OrderStatus,
@@ -184,7 +186,7 @@ public class OrderController : ControllerBase
             var order = new Order
             {
                 UserId = orderRequest.UserId,
-                OrderDate = DateTime.UtcNow.AddHours(7),
+                OrderDate = DateTime.UtcNow,
                 OrderStatus = OrderStatus.Ordered.ToString(), 
                 TotalPrice = orderRequest.TotalPrice,
                 Address = orderRequest.Address,
@@ -220,8 +222,36 @@ public class OrderController : ControllerBase
 
             // Commit transaction
             await transaction.CommitAsync();
+            
+            // Retrieve the order along with its details and return the full response
+            var createdOrder = await _context.Orders
+                .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.Product)
+                .FirstOrDefaultAsync(o => o.Id == order.Id);
 
-            return Created();
+            var user = await _context.Users.FindAsync(order.UserId);
+
+            var orderResponse = new OrderResponse
+            {
+                Id = createdOrder!.Id,
+                UserId = createdOrder.UserId,
+                CustomerName = user!.FullName,
+                OrderCode = createdOrder.OrderCode,
+                OrderDate = createdOrder.OrderDate,
+                OrderStatus = createdOrder.OrderStatus,
+                TotalPrice = createdOrder.TotalPrice,
+                Address = createdOrder.Address,
+                PhoneNumber = createdOrder.PhoneNumber,
+                OrderDetails = createdOrder.OrderDetails.Select(od => new OrderDetailResponse
+                {
+                    OrderDetailId = od.Id,  // Include OrderDetailId in the response
+                    ProductName = od.Product!.Name,
+                    Quantity = od.Quantity,
+                    Price = od.Price
+                }).ToList()
+            };
+
+            return CreatedAtAction("GetOrder", new { id = orderResponse.Id }, orderResponse);
         }
         catch (Exception ex)
         {

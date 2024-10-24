@@ -23,11 +23,24 @@ public class DeliveryController : ControllerBase
     [Authorize(Roles = nameof(RoleName.ShopStaff))]
     public async Task<IActionResult> CreateDelivery(DeliveryRequest request)
     {
-        var order = await _dbContext.Orders.FirstOrDefaultAsync(x => x.Id == request.OrderId);
+        var order = await _dbContext.Orders.Include(o => o.User)
+            .FirstOrDefaultAsync(x => x.Id == request.OrderId);
         
         if (order == null)
         {
             return NotFound("Order not found.");
+        }
+        
+        if (order.OrderStatus != OrderStatus.Ordered.ToString())
+        {
+            return BadRequest("The Order have been assigned or delivered.");
+        }
+        
+        var isExistDelivery = await _dbContext.Deliveries.AnyAsync(x => x.OrderId == request.OrderId);
+        
+        if (isExistDelivery)
+        {
+            return BadRequest("Delivery has been created.");
         }
         
         var deliveryStaff = await _dbContext.Users.Include(u => u.Role)
@@ -53,7 +66,27 @@ public class DeliveryController : ControllerBase
 
         if (result > 0)
         {
-            return Ok();
+            // Map to DeliveryResponse DTO
+            var deliveryResponse = new DeliveryResponse
+            {
+                Id = delivery.Id,
+                OrderId = delivery.OrderId,
+                DeliveryStaffId = delivery.DeliveryStaffId,
+                DeliveryDate = delivery.DeliveryDate,
+                DeliveryManName = deliveryStaff.FullName,
+                Order = new DeliveryOrderResponse
+                {
+                    CustomerName = order.User?.FullName,
+                    OrderCode = order.OrderCode,
+                    OrderDate = order.OrderDate,
+                    OrderStatus = order.OrderStatus,
+                    TotalPrice = order.TotalPrice,
+                    Address = order.Address,
+                    PhoneNumber = order.PhoneNumber
+                }
+            };
+        
+            return CreatedAtAction("GetDelivery", new { id = delivery.Id }, deliveryResponse);
         }
        
         return BadRequest();
@@ -208,7 +241,7 @@ public class DeliveryController : ControllerBase
             return BadRequest("Order has been cancelled.");
         }
         
-        delivery.DeliveryDate = DateTime.UtcNow.AddHours(7);
+        delivery.DeliveryDate = DateTime.UtcNow;
         
         delivery.Order.OrderStatus = OrderStatus.Delivered.ToString();
         
