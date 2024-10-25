@@ -21,7 +21,14 @@ public class ProductController : ControllerBase
     }
     
     [HttpGet]
-    public async Task<IActionResult> GetProducts(int pageIndex = 1, int pageSize = 10, string? searchString = null, string? searchBy = null)
+    public async Task<IActionResult> GetProducts(
+        int pageIndex = 1, 
+        int pageSize = 10, 
+        string? searchString = null, 
+        string? searchBy = null, 
+        string? sortBy = "price", 
+        string? sortOrder = "asc"
+        )
     {
         var productsQuery = _dbContext.Products
             .Include(p => p.Brand)
@@ -41,6 +48,22 @@ public class ProductController : ControllerBase
             productsQuery = productsQuery.Where(searchByExpression);
         }
         
+        Expression<Func<Product, object>> sortByExpression = sortBy switch
+        {
+            "name" => p => p.Name,
+            "price" => p => p.Price,
+            "stock" => p => p.Stock,
+            "brand" => p => p.Brand.Name,
+            _ => p => p.Name // Default to sorting by name
+        };
+
+        // Apply sorting based on SortOrder
+        productsQuery = sortOrder?.ToLower() switch
+        {
+            "asc" => productsQuery.OrderBy(sortByExpression),
+            "desc" => productsQuery.OrderByDescending(sortByExpression),
+            _ => productsQuery.OrderBy(sortByExpression)
+        };
 
         // Create paginated result from product entities
         var pagedProducts = await Task.Run(() => 

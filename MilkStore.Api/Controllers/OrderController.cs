@@ -25,7 +25,7 @@ public class OrderController : ControllerBase
     
     [HttpGet]
     [Authorize(Roles = $"{nameof(RoleName.ShopStaff)},{nameof(RoleName.Customer)}")]
-    public async Task<ActionResult> GetOrders(int pageIndex = 1, int pageSize = 10, string? searchString = null, string? searchBy = null)
+    public async Task<ActionResult> GetOrders(int pageIndex = 1, int pageSize = 10, string? searchString = null, string? searchBy = null, string? sortBy = "orderDate", string? sortOrder = "desc")
     {
         var ordersQuery = _context.Orders.AsQueryable();
         
@@ -42,6 +42,20 @@ public class OrderController : ControllerBase
         {
             ordersQuery = ordersQuery.Where(searchByExpression);
         }
+        
+        Expression<Func<Order, object>> orderSortBy = sortBy switch
+        {
+            "orderDate" => o => o.OrderDate,
+            "totalPrice" => o => o.TotalPrice,
+            _ => o => o.OrderDate // Default sorting by OrderDate
+        };
+
+        ordersQuery = sortOrder switch
+        {
+            "asc" => ordersQuery.OrderBy(orderSortBy),
+            "desc" => ordersQuery.OrderByDescending(orderSortBy),
+            _ => ordersQuery.OrderBy(orderSortBy)
+        };
         
         var pagedOrders = await Task.Run(() => 
             PagedResult<Order>.CreateAsync(ordersQuery.Include(o => o.User), pageIndex, pageSize)
@@ -112,7 +126,7 @@ public class OrderController : ControllerBase
     
     [HttpGet("user/{id}")]
     [Authorize(Roles = $"{nameof(RoleName.ShopStaff)},{nameof(RoleName.Customer)}")]
-    public async Task<ActionResult> GetOrdersByUserId(Guid id, int pageIndex = 1, int pageSize = 10, string? searchString = null, string? searchBy = null)
+    public async Task<ActionResult> GetOrdersByUserId(Guid id, int pageIndex = 1, int pageSize = 10, string? searchString = null, string? searchBy = null, string? sortBy = "orderDate", string? sortOrder = "desc")
     {
         var ordersQuery = _context.Orders.AsQueryable();
         
@@ -129,6 +143,20 @@ public class OrderController : ControllerBase
         {
             ordersQuery = ordersQuery.Where(searchByExpression);
         }
+        
+        Expression<Func<Order, object>> orderSortBy = sortBy switch
+        {
+            "orderDate" => o => o.OrderDate,
+            "totalPrice" => o => o.TotalPrice,
+            _ => o => o.OrderDate // Default sorting by OrderDate
+        };
+
+        ordersQuery = sortOrder switch
+        {
+            "asc" => ordersQuery.OrderBy(orderSortBy),
+            "desc" => ordersQuery.OrderByDescending(orderSortBy),
+            _ => ordersQuery.OrderBy(orderSortBy)
+        };
         
         ordersQuery = ordersQuery.Where(o => o.UserId == id);
         

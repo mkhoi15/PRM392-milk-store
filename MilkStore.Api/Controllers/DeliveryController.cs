@@ -102,7 +102,8 @@ public class DeliveryController : ControllerBase
             .Include(d => d.Order)
             .ThenInclude(o => o.User)
             .OrderByDescending(d => d.Order.OrderDate);
-        
+
+        deliveriesQuery = deliveriesQuery.OrderByDescending(d => d.Order.OrderDate);
 
         // Create paginated result from delivery entities
         var pagedDeliveries = await Task.Run(() => 
@@ -185,7 +186,8 @@ public class DeliveryController : ControllerBase
             .OrderByDescending(d => d.Order.OrderDate)
             .Where(d => d.DeliveryStaffId == id);
         
-
+        deliveriesQuery = deliveriesQuery.OrderByDescending(d => d.Order.OrderDate);
+        
         // Create paginated result from delivery entities
         var pagedDeliveries = await Task.Run(() => 
             PagedResult<Delivery>.CreateAsync(deliveriesQuery, pageIndex, pageSize)
