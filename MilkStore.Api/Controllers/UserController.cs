@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MilkStore.Api.Models;
 using MilkStore.Api.Shared.Dto;
 using MilkStore.Api.Shared.Dto.User;
@@ -99,5 +100,26 @@ public class UserController : ControllerBase
         return Ok("Deleted user");
     }
     
-    
+    [HttpGet("/delivery-man")]
+    public async Task<IActionResult> GetDelivery()
+    {
+        
+        var usersQuery = _dbContext.Users
+            .AsQueryable();
+
+        usersQuery = usersQuery.Where(u => u.Role.Name == RoleName.DeliveryStaff.ToString() && u.IsDeleted == false);
+
+        var delivery = await usersQuery.Select(
+            u => new
+            {
+                u.Id,
+                u.Username,
+                u.Email,
+                u.FullName,
+                u.PhoneNumber
+            }
+        ).ToListAsync();
+        
+        return Ok(delivery);
+    } 
 }
