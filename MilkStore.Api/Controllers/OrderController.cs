@@ -311,6 +311,7 @@ public class OrderController : ControllerBase
         existedOrder.PhoneNumber = order.PhoneNumber ?? existedOrder.PhoneNumber;
         existedOrder.OrderCode = order.OrderCode ?? existedOrder.OrderCode;
         
+        await _context.SaveChangesAsync();
         
         return Ok(existedOrder);
     }
