@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -177,7 +178,7 @@ public class DeliveryController : ControllerBase
     
     [HttpGet("user/{id}")]
     [Authorize(Roles = $"{nameof(RoleName.ShopStaff)},{nameof(RoleName.DeliveryStaff)}")]
-    public async Task<IActionResult> GetDeliveriesByDeliveryStaffId(Guid id, int pageIndex = 1, int pageSize = 10)
+    public async Task<IActionResult> GetDeliveriesByDeliveryStaffId(Guid id, int pageIndex = 1, int pageSize = 10, string? sortBy = "orderDate", string? sortOrder = "desc")
     {
         var deliveriesQuery = _dbContext.Deliveries
             .Include(d => d.DeliveryStaff)
@@ -192,6 +193,20 @@ public class DeliveryController : ControllerBase
         var pagedDeliveries = await Task.Run(() => 
             PagedResult<Delivery>.CreateAsync(deliveriesQuery, pageIndex, pageSize)
         );
+        
+        Expression<Func<Delivery, object>> sortByExpression = sortBy switch
+        {
+            "orderDate" => p => p.Order.OrderDate,
+            _ => p => p.Order.OrderDate // Default to sorting by name
+        };
+
+        // Apply sorting based on SortOrder
+        deliveriesQuery = sortOrder?.ToLower() switch
+        {
+            "asc" => deliveriesQuery.OrderBy(sortByExpression),
+            "desc" => deliveriesQuery.OrderByDescending(sortByExpression),
+            _ => deliveriesQuery.OrderBy(sortByExpression)
+        };
 
         // Map the paginated result to DeliveryResponse DTOs
         var deliveryResponses = pagedDeliveries.Select(d => new DeliveryResponse
